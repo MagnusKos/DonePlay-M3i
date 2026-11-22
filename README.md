@@ -9,6 +9,10 @@ overlord, sets tasks, and refines the output. And here is what we've got so far.
 
 
 
+## Documentation
+- [RESEARCH.md](docs/RESEARCH.md) — public writeup of the whole RE journey
+- [HANDOFF.md](HANDOFF.md) — technical state & continuation notes (agent sessions)
+
 ## The device
 
 See [Explay_M3i.md](Explay_M3i.md) for the hardware at hand: an Explay M3i
