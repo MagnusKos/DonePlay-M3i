@@ -35,7 +35,18 @@ def cmd_info(args):
 
 def cmd_flash(args):
     from . import flasher
-    flasher.cmd_full_replay(args.stream)
+    stream = args.stream
+    if stream and stream.lower().endswith('.rfw'):
+        # firmware given: build the stream automatically (JSON is internal)
+        import os
+        os.makedirs('derived', exist_ok=True)
+        auto = os.path.join('derived', '_auto_%s.json' % os.path.splitext(os.path.basename(stream))[0])
+        print('building flash stream from %s ...' % stream)
+        rc = flasher.cmd_build(stream, auto)
+        if rc:
+            return rc
+        stream = auto
+    flasher.cmd_full_replay(stream)
     return 0
 
 
@@ -81,7 +92,7 @@ def main(argv=None):
     sub.add_parser('status', help='detect player (upgrade mode)')
     sub.add_parser('info', help='boot updater + read flash ID')
 
-    p = sub.add_parser('flash', help='flash a stream (default: derived/full_stream.json = original firmware)')
+    p = sub.add_parser('flash', help='flash firmware (.rfw — stream built automatically) or a stream json (default: stock)')
     p.add_argument('stream', nargs='?', default=None)
 
     p = sub.add_parser('build', help='build flash stream from (modified) .rfw')

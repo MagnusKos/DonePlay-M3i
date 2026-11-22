@@ -69,9 +69,9 @@ uv run rkx --help
 # Device (player in upgrade mode: hold PLAY while plugging; USB 071b:3202)
 uv run rkx status                 # ROM / updater mode detection
 uv run rkx info                   # boot updater, read NAND flash ID
-uv run rkx flash derived/full_stream.json      # verbatim replay of captured update (RECOVERY TOOL)
-uv run rkx build modified.rfw out.json        # stream from modified firmware (auto ECC)
-uv run rkx flash out.json                      # flash custom firmware
+uv run rkx flash                               # flash STOCK firmware (recovery: unbricks anything)
+uv run rkx flash modified.rfw                  # flash custom firmware — stream built automatically
+uv run rkx build modified.rfw out.json        # (advanced) build stream json only, for inspection
 
 # Firmware container
 uv run rkx rfw-info firmware.rfw               # header/blocks/anchors
@@ -109,4 +109,4 @@ In an Incus container, passthrough with
 
 ## Safety
 The boot ROM is in mask ROM — the player is effectively unbrickable:
-hold PLAY while plugging USB and re-flash with `uv run rkx flash derived/full_stream.json`.
+hold PLAY while plugging USB and re-flash with `uv run rkx flash`.
