@@ -113,9 +113,14 @@ def _load_basis():
     global _BASIS
     if _BASIS is not None:
         return _BASIS
-    path = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "spare_basis.bin")
+    here = _os.path.dirname(_os.path.abspath(__file__))
+    for path in (_os.path.join(here, "spare_basis.bin"),
+                 _os.path.join(here, "..", "..", "derived", "spare_basis.bin"),
+                 _os.path.join("derived", "spare_basis.bin")):
+        if _os.path.exists(path):
+            break
     if not _os.path.exists(path):
-        raise RuntimeError("spare_basis.bin missing (regenerate via derive_from_pcap.py)")
+        raise RuntimeError("spare_basis.bin missing (run: rkx derive <capture.pcapng>)")
     with open(path, "rb") as f:
         C = f.read(16)
         n = int.from_bytes(f.read(4), "little")

@@ -39,9 +39,15 @@ Usage:
 Requires pyusb. Run as user with access to the USB device node.
 """
 
+import os
 import struct
 import sys
 import time
+
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_DATA = os.path.join(_HERE, '..', '..', 'data')
+ROM_D_IMG = os.path.join(_DATA, 'RockUpdateD.img')
+ROM_P_IMG = os.path.join(_DATA, 'RockUpdateP.img')
 
 VID = 0x071B
 PID = 0x3202
@@ -308,3 +314,14 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+
+def boot_default_images(r=None):
+    """Convenience: download the bundled D.img/P.img (in data/) and return a
+    live RockUsb session with the updater running."""
+    import time as _t
+    r = r or RockUsb()
+    if device_mode(r.dev) == 'rom':
+        r.boot_updater(open(ROM_D_IMG, 'rb').read(), open(ROM_P_IMG, 'rb').read())
+        _t.sleep(0.8)
+        r = RockUsb()
+    return r

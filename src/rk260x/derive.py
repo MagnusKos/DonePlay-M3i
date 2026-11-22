@@ -1,13 +1,18 @@
-#!/usr/bin/env python3
-"""Regenerate the derived flasher artifacts from the usbmon capture:
-  full_stream.json   - all rockusb CBWs + payloads (verbatim replay source)
-  update_stream.json - write pages only (legacy)
-  page_template.json - per-page .rfw source map (for flash.py build)
-  protocol_trace.txt - human-readable trace
-Usage: python3 derive_from_pcap.py <capture.pcapng|pcap> [original.rfw]
-Expects the XOR key at ./xor_key_512.bin (committed).
-"""
+"""Derive flasher artifacts (full_stream, page_template, spare_basis) from a capture."""
+import json
+import os
+import struct
+import sys
+
+
 import json, os, struct, sys
+
+
+def _data_fw():
+    here = os.path.dirname(os.path.abspath(__file__))
+    p = os.path.join(here, '..', '..', 'data', 'firmwares', 'Firmware M3i 070930.rfw')
+    return p if os.path.exists(p) else 'Firmware M3i 070930.rfw'
+
 
 def read_pkts(path):
     d = open(path, 'rb').read()
@@ -23,10 +28,13 @@ def read_pkts(path):
         return pkts
     raise SystemExit('only pcapng supported')
 
-def main():
-    pcap = sys.argv[1]
-    rfw_path = sys.argv[2] if len(sys.argv) > 2 else '/data/ReverseEngineering/ExplayM3i/Firmware/Firmware M3i 070930.rfw'
-    here = os.path.dirname(os.path.abspath(__file__))
+def derive(pcap, rfw_path=None):
+    if rfw_path is None:
+        rfw_path = os.environ.get('RK260X_FW') or os.path.join(_data_fw())
+    here = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
+    outdir = os.path.join(here, 'derived')
+    os.makedirs(outdir, exist_ok=True)
+    here = outdir
     pkts = read_pkts(pcap)
     cmds, writes = [], []
     devs = set(p[11] for p in pkts if len(p) >= 48)
@@ -103,5 +111,3 @@ def main():
             f.write(vout.to_bytes(16, 'little'))
     print('spare_basis: rank %d/4096 from %d blocks' % (len(basis), len(samples)))
 
-if __name__ == '__main__':
-    main()

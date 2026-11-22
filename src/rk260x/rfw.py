@@ -136,7 +136,7 @@ def cmd_info(path):
         print(f"  {k:14s} {v}")
     print(f"  size           {len(data)} (0x{len(data):x})")
     # default key shipped next to this file
-    kd = os.path.join(os.path.dirname(os.path.abspath(__file__)), "xor_key_512.bin")
+    kd = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data", "xor_key_512.bin")
     if os.path.exists(kd):
         key = load_key(kd)
         print("\n== XOR key found; code-block anchors:")
@@ -153,7 +153,7 @@ def cmd_extract(path, outdir, keyfile=None):
     data = open(path, "rb").read()
     os.makedirs(outdir, exist_ok=True)
     if keyfile is None:
-        keyfile = os.path.join(os.path.dirname(os.path.abspath(__file__)), "xor_key_512.bin")
+        keyfile = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data", "xor_key_512.bin")
     key = load_key(keyfile)
     open(os.path.join(outdir, "header.bin"), "wb").write(data[:0x38])
     open(os.path.join(outdir, "config_block_0x38.bin"), "wb").write(data[0x38:0x690])

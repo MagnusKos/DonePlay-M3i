@@ -1,22 +1,13 @@
-#!/usr/bin/env python3
-"""
-m3i_gui.py — Firmware image browser/editor for the Explay M3i (RK2606A).
+"""GUI firmware image browser/editor."""
+import os
+import struct
+import subprocess
+import sys
+import tkinter as tk
+from tkinter import filedialog, messagebox, simpledialog
+from PIL import Image, ImageTk
 
-Images are big-endian BGR565 rasters, addressed by a FirmwarePuller-style
-.tl map (name / offset / width / height), also creatable/editable here.
 
-Features:
-  - browse/search mapped images, live preview
-  - custom view: arbitrary offset + resolution, prev/next chunk stepping
-  - add the current view to the map, edit/remove entries, save map as .tl
-  - export/import PNG replacements
-  - save modified firmware
-  - Tools panel: build a flash stream from the modified firmware, flash it
-    (calls flash.py), extract/parse .rfw info (calls rfw.py)
-
-Run on a machine with a display:  python3 m3i_gui.py
-Requires: pillow. tkinter is in the stdlib.
-"""
 
 import os
 import struct
@@ -27,8 +18,8 @@ from tkinter import filedialog, messagebox, simpledialog
 from PIL import Image, ImageTk
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-FW_DEFAULT = '/data/ReverseEngineering/ExplayM3i/Firmware/Firmware M3i 070930.rfw'
-TL_DEFAULT = '/data/ReverseEngineering/ExplayM3i/Docs/m3i.tl'
+FW_DEFAULT = os.environ.get('RK260X_FW') or os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'data', 'firmwares', 'Firmware M3i 070930.rfw')
+TL_DEFAULT = os.environ.get('RK260X_TL') or os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'data', 'captures', 'm3i.tl')
 
 
 def parse_tl(path):
@@ -289,30 +280,55 @@ class App:
         if not fw:
             return
         out = os.path.join(HERE, 'built_stream.json')
-        r = subprocess.run([sys.executable, os.path.join(HERE, 'flash.py'), 'build', fw, out],
-                           capture_output=True, text=True)
+        from ..cli import main as rkx_main
+        import io, contextlib
+        buf = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(buf):
+                rkx_main(['build', fw, out])
+            r = type('R', (), {'stdout': buf.getvalue(), 'stderr': ''})()
+        except SystemExit as e:
+            r = type('R', (), {'stdout': buf.getvalue(), 'stderr': 'exit %s' % e.code})()
         self.update_status('build: ' + (r.stdout + r.stderr).strip().replace('\n', ' | ')[:200])
 
     def tool_flash(self):
         if not messagebox.askyesno('flash', 'Player in PLAY-boot mode?\nThis writes flash!'):
             return
-        r = subprocess.run([sys.executable, os.path.join(HERE, 'flash.py'), 'full'],
-                           capture_output=True, text=True)
+        from ..cli import main as rkx_main
+        import io, contextlib
+        buf = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(buf):
+                rkx_main(['flash'])
+            r = type('R', (), {'stdout': buf.getvalue(), 'stderr': ''})()
+        except SystemExit as e:
+            r = type('R', (), {'stdout': buf.getvalue(), 'stderr': 'exit %s' % e.code})()
         self.update_status('flash: ' + (r.stdout + r.stderr).strip().replace('\n', ' | ')[:200])
 
     def tool_info(self):
         fw = filedialog.askopenfilename(title='firmware for info')
         if not fw:
             return
-        r = subprocess.run([sys.executable, os.path.join(HERE, 'rfw.py'), 'info', fw],
-                           capture_output=True, text=True)
+        from ..cli import main as rkx_main
+        import io, contextlib
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(buf):
+            rkx_main(['rfw-info', fw])
+        r = type('R', (), {'stdout': buf.getvalue(), 'stderr': ''})()
         win = tk.Toplevel(self.root)
         tk.Text(win, height=24, width=80).pack()
         t = win.winfo_children()[0]
         t.insert('1.0', r.stdout + r.stderr)
 
 
-if __name__ == '__main__':
+
+
+def run(map_path=None, firmware_path=None):
+    global TL_DEFAULT, FW_DEFAULT
+    if map_path:
+        TL_DEFAULT = map_path
+    if firmware_path:
+        FW_DEFAULT = firmware_path
     root = tk.Tk()
     App(root)
     root.mainloop()

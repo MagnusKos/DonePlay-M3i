@@ -1,27 +1,13 @@
-# --- private research (own nested repo, never pushed) ---
-REA-Session/
-
-# --- large derived artifacts (regenerable from pcap via Tools) ---
-USB-Dump/m3i_update1.pcap
-USB-Dump/nand_dump.bin
-USB-Dump/written_image.bin
-USB-Dump/protocol_trace.txt
-USB-Dump/protocol_trace_rockusb.txt.gz.tmp
-
-# --- python ---
 __pycache__/
 *.pyc
+.venv/
+derived/
+built_stream.json
 
-# --- os junk ---
-.DS_Store
-Thumbs.db
-Tools/m3i_tools/full_stream.json
-Tools/m3i_tools/update_stream.json
-Tools/m3i_tools/page_template.json
-USB-Dump/m3i_update1_rockusb.pcapng
+# private research session (own nested repo, never pushed)
+REA-Session/
+# original Windows tools kept out of the public repo
+data/software_to_reverse/
 
-Software/
-Docs/
-spare_basis.bin
-Tools/m3i_tools/spare_basis.bin
-Artwork/
+# scratch firmwares (the ORIGINAL stock firmware IS tracked)
+data/firmwares/modified*.rfw

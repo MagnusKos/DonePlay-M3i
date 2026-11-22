@@ -1,23 +1,16 @@
-#!/usr/bin/env python3
-"""
-flash.py — M3i (RK2606A) NAND flasher.
+"""NAND flasher: verbatim replay + build-from-modified-firmware."""
+import os as _os
 
-Modes:
-  replay  — replay a captured official update stream (byte-perfect: data +
-            spares/ECC from a usbmon capture of ConsumerUpdate). Use this to
-            re-flash the ORIGINAL firmware (recovery / experiments).
-  info    — boot updater, show flash ID.
+def _find_derived(name):
+    """Locate a derived artifact: ./derived/, <pkg>/../../derived/"""
+    here = _os.path.dirname(_os.path.abspath(__file__))
+    for p in (_os.path.join('derived', name),
+              _os.path.join(here, '..', '..', 'derived', name)):
+        if _os.path.exists(p):
+            return p
+    raise SystemExit("missing derived/%s — run: rkx derive <capture.pcapng>" % name)
 
-Replay protocol (from usbmon capture of the real ConsumerUpdate run):
-  boot updater via EP0 D+P download, then BOT:
-    TUR, READ_FLASH_ID, SET_DEV_ID(6),
-    WRITE10(lba, cnt=1, dlen=0, flags=0) + 2112B bulk OUT (2048 data + 64
-    spare/ECC) + CSW — one MLC page per command.
-  NOTE: CBW dCBWDataTransferLength must be 0 (tool convention); the data
-  phase is a raw bulk transfer of count*512+spares.
 
-WARNING: writes to flash. Recovery = mask ROM (hold PLAY) + replay again.
-"""
 
 import json
 import os
@@ -25,11 +18,17 @@ import struct
 import sys
 import time
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from rockusb import RockUsb, RockError, device_mode, find_device, crc16_ccitt_false
+from .rockusb import RockUsb, RockError, device_mode, find_device, crc16_ccitt_false
+from .ecc import page_spare
 from usb.core import USBError
 
-HERE = os.path.dirname(os.path.abspath(__file__))
+
+def _data_fw():
+    here = os.path.dirname(os.path.abspath(__file__))
+    p = os.path.join(here, '..', '..', 'data', 'firmwares', 'Firmware M3i 070930.rfw')
+    return p if os.path.exists(p) else 'Firmware M3i 070930.rfw'
+
+
 OP_READ_10 = 0x04
 OP_WRITE_10 = 0x05
 
@@ -69,8 +68,9 @@ def read_verify(r, lba, pages=5):
 
 def boot(r):
     if device_mode(r.dev) == 'rom':
-        D = open(os.path.join(HERE, 'RockUpdateD.img'), 'rb').read()
-        P = open(os.path.join(HERE, 'RockUpdateP.img'), 'rb').read()
+        from .rockusb import ROM_D_IMG, ROM_P_IMG
+        D = open(ROM_D_IMG, 'rb').read()
+        P = open(ROM_P_IMG, 'rb').read()
         r.boot_updater(D, P)
         time.sleep(0.8)
         r = RockUsb()
@@ -161,13 +161,14 @@ def cmd_full_replay(stream_file=None):
     """Replay the ENTIRE captured command stream verbatim: every CBW in
     capture order (TUR/ID/SET/probes/TEST_BB scan/ERASEs/writes/verifies),
     with payloads. This reproduces the official update 1:1."""
-    stream_file = stream_file or os.path.join(HERE, 'full_stream.json')
+    stream_file = stream_file or _find_derived('full_stream.json')
     cmds = json.load(open(stream_file))
     print('full stream:', len(cmds), 'commands')
     r = RockUsb()
     if device_mode(r.dev) == 'rom':
-        D = open(os.path.join(HERE, 'RockUpdateD.img'), 'rb').read()
-        P = open(os.path.join(HERE, 'RockUpdateP.img'), 'rb').read()
+        from .rockusb import ROM_D_IMG, ROM_P_IMG
+        D = open(ROM_D_IMG, 'rb').read()
+        P = open(ROM_P_IMG, 'rb').read()
         r.boot_updater(D, P)
         time.sleep(0.8)
         r = RockUsb()
@@ -229,9 +230,9 @@ def cmd_build(mod_rfw_path, out_json, allow_bad_ecc=False):
     (full_stream.json + page_template.json). Pages whose data changes keep
     the template spare (ECC) — flagged unless --allow-bad-ecc."""
     mod = open(mod_rfw_path, 'rb').read()
-    orig = open('/data/ReverseEngineering/ExplayM3i/Firmware/Firmware M3i 070930.rfw', 'rb').read()
-    tstream = json.load(open(os.path.join(HERE, 'full_stream.json')))
-    pmap = json.load(open(os.path.join(HERE, 'page_template.json')))
+    orig = open(os.path.join(_data_fw()), 'rb').read()
+    tstream = json.load(open(_find_derived('full_stream.json')))
+    pmap = json.load(open(_find_derived('page_template.json')))
     wi = 0
     out = []
     changed = 0
@@ -287,11 +288,11 @@ def main():
         args = [a for a in sys.argv[2:] if not a.startswith('--')]
         if not args:
             print('usage: flash.py build <mod.rfw> <out_stream.json> [--allow-bad-ecc]'); return 1
-        return cmd_build(args[0], args[1] if len(args) > 1 else os.path.join(HERE, 'built_stream.json'), allow_bad_ecc=True)
+        return cmd_build(args[0], args[1] if len(args) > 1 else 'built_stream.json', allow_bad_ecc=True)
     if cmd == 'full':
         return cmd_full_replay(next((a for a in sys.argv[2:] if not a.startswith('--')), None))
     if cmd == 'replay':
-        stream = next((a for a in sys.argv[2:] if not a.startswith('--')), os.path.join(HERE, 'update_stream.json'))
+        stream = next((a for a in sys.argv[2:] if not a.startswith('--')), _find_derived('update_stream.json'))
         return cmd_replay(stream, verify='--verify' in sys.argv)
     if cmd == 'info':
         return cmd_info()
@@ -299,5 +300,3 @@ def main():
     return 1
 
 
-if __name__ == '__main__':
-    sys.exit(main())
