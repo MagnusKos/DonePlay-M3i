@@ -70,6 +70,38 @@ def main():
             pmap.append(None); expect = None
     json.dump(pmap, open(os.path.join(here, 'page_template.json'), 'w'))
     print('page_template: %d/%d pages sourced' % (sum(1 for p in pmap if p), len(pmap)))
+    # spare (ECC) affine-map basis: full 16B group per 512B block
+    groups = {}
+    for lba, hexdata in writes:
+        pl = bytes.fromhex(hexdata)
+        for gi in range(4):
+            groups.setdefault(pl[gi*512:(gi+1)*512], pl[2048+gi*16:2048+(gi+1)*16])
+    def bits(d):
+        v = 0
+        for i, b in enumerate(d): v |= b << (8*i)
+        return v
+    if bytes(512) not in groups:
+        raise SystemExit('capture lacks an all-zero 512B block (constant C)')
+    C = groups[bytes(512)]
+    samples = [(bits(d), bits(bytes(a ^ b for a, b in zip(g, C))))
+               for d, g in groups.items() if set(d) != {0xff}]
+    basis = {}
+    for vin, vout in samples:
+        while vin:
+            hb = vin.bit_length() - 1
+            if hb in basis:
+                bin_, bout = basis[hb]
+                vin ^= bin_; vout ^= bout
+            else:
+                basis[hb] = (vin, vout); break
+    with open(os.path.join(here, 'spare_basis.bin'), 'wb') as f:
+        f.write(C.to_bytes(16, 'little') if isinstance(C, int) else C)
+        f.write(len(basis).to_bytes(4, 'little'))
+        for hb in sorted(basis):
+            vin, vout = basis[hb]
+            f.write(vin.to_bytes(512, 'little'))
+            f.write(vout.to_bytes(16, 'little'))
+    print('spare_basis: rank %d/4096 from %d blocks' % (len(basis), len(samples)))
 
 if __name__ == '__main__':
     main()
