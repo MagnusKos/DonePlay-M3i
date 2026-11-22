@@ -44,9 +44,8 @@ stock firmware from the captured update stream.
 - [x] Full official-update replay flasher - device boots after flash
 - [x] .rfw crypto (XOR key, block anchors), firmware stages extracted
 - [x] NAND ECC/spare computation for arbitrary data - validated on corpus
-- [x] Custom firmware pipeline (modify .rfw -> build -> flash) - offline-validated
+- [x] Custom firmware pipeline (modify .rfw -> build -> flash) - **verified on-device** (boot animation frame edited, flashed, player boots normally, 2026-11-23)
 - [x] UI image map + GUI editor (.tl format, verified offsets)
-- [ ] First custom boot animation on device
 - [ ] ZSP code patching (spectrum analyzer height, UI behavior)
 
 ## rk260x-tools
