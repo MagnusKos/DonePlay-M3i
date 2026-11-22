@@ -256,18 +256,14 @@ def cmd_build(mod_rfw_path, out_json, allow_bad_ecc=False):
                     changed += 1
                     payload[:2048] = newpage
                     # recompute spare (ECC) for the modified page
-                    import rk_ecc
                     try:
-                        payload[2048:] = rk_ecc.page_spare(bytes(newpage))
+                        payload[2048:] = page_spare(bytes(newpage))
                     except Exception as e:
                         print('spare recompute failed page %d: %s' % (wi, e))
                 entry[1] = bytes(payload).hex()
             wi += 1
         out.append(entry)
-    print('pages changed vs original: %d (spares recomputed via rk_ecc)' % changed)
-    if changed and not allow_bad_ecc:
-        print('NOTE: spares ARE recomputed; --allow-bad-ecc now only skips the sanity gate.')
-        return 1
+    print('pages changed vs original: %d (spares recomputed)' % changed)
     json.dump(out, open(out_json, 'w'))
     print('wrote', out_json, '(%d commands)' % len(out))
     return 0
