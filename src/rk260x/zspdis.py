@@ -82,7 +82,9 @@ def disasm_word(w, nextw=None):
             if key in ((0,1,0),(0,1,1),(1,0,0),(1,0,1)): return f"{mn} r{(w>>5)&7}, {w&0xF}", 1
             return f"{mn} r{(w>>5)&7}, r{(w>>1)&7}", 1
         if sub == 8: return f"mov r{w&0xF}, c{(w>>4)&0xF}", 1
+        if sub == 9: return f"mov r{w&0xF}, c{((w>>4)&0xF)+16}", 1
         if sub == 0xA: return f"mov c{(w>>4)&0xF}, r{w&0xF}", 1
+        if sub == 0xB: return f"mov c{((w>>4)&0xF)+16}, r{w&0xF}", 1
         if sub == 12: return f"mov r{(w>>4)&0xF}, r{w&0xF}", 1
         return f"reserved_{b}", 1
     if op == 0xC:
