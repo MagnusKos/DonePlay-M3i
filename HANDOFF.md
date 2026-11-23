@@ -11,6 +11,10 @@ Full private notes: `REA-Session/NOTES.md` (own nested git repo, never push).
 - REA 6.10.1 + Ghidra 12.2 + JDK 25 at `/data/ReverseEngineering/tools/`
   (`source REA-Session/env.sh`). Seed-file format for Ghidra:
   `0x<addr>\tfunction\t<name>` lines via REA_GHIDRA_SEED_FILE.
+- GHIDRA SCOPE (verified 2026-11-23): Ghidra has NO ZSP400 processor module —
+  it CANNOT load/analyze the player firmware. ZSP code RE = our `zspdis.py`
+  (+ custom dataflow on its output). Ghidra is for x86/PE targets only
+  (OEM PC tools, RockTools compiler binaries).
 - SDK reference source: `git clone --depth 1 https://github.com/solderneer/SimpleMP4 /tmp/SimpleMP4`
   (gets wiped from /tmp on container restarts — re-clone when needed).
 - ZSP400 ISA manual (opcode tables): extracted text at
