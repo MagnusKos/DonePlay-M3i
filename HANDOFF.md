@@ -75,7 +75,49 @@ LSI/ZSP, 2005, cygwin) — tree at `REA-Session/artifacts/oldweb/RockTools/`.
   array is NOT yet found (it likely computes string addresses at runtime:
   base + item*0x40 + lang*0x5000).
 
-## NEXT TASK: menu injection ("Hack" item in settings menu)
+## NEXT TASK (clean session): COMPLETE THE IMAGE MAP
+Next session is ONLY about image mapping. Goal: finish `rkx automap` and the
+M3i map. State & method: see `REA-Session/NOTES.md` "AUTOMAP"" sections +
+`src/rk260x/automap.py`, `src/rk260x/slicer.py`. Map files:
+`data/captures/m3i.json` (hand+progression, 93) and
+`data/captures/m3i.json`-merged view: `data/captures/m3i_automap.json` (119).
+Work order:
+1. TRUE per-function backward dataflow for the ~60 draw sites whose x/y/
+   index come from stack frames (linear slices can't fold them). This is
+   the main remaining engineering piece (discipline = Consumer.exe RE).
+2. Text path: find the firmware's DrawString/font code (letters 'A'/'F'
+   seen in volzone at w=24 are unresolved); the earlier 'font region'
+   theory was DROPPED (colorful, not BW text).
+3. Sweep remaining unmapped spans (audit = gap report of map vs tail).
+4. Operator loop: chess-labeled contact sheet
+   (`REA-Session/artifacts/automap/`) + label_index.txt; operator verdicts
+   apply as map corrections (3 rounds done, huge wins each time).
+5. Generality: bare-.rfw mode needs the C bootstrap without captured data
+   (statistical calibration OVERFITS — only flash-placement data proved
+   robust) and per-firmware draw-fn identification.
+
+### Image-map facts (do not re-derive)
+- Draw function: runtime 0x1996 (185 sites in overlay modules; resident
+  thunk 0x1980). Convention: W=r6 immediate, H pushed (st?/stdu), addr32
+  in even reg pairs (base const + index*(w*h*2) via .e ops), x/y small
+  immediates. Loop/indexed draws read params from stack frames (r10 area).
+- UI code lives in ENCRYPTED OVERLAY MODULES across .rfw 0xFA88..0xE0000
+  (~52 runs; per-page best-XOR-anchor code-scoring finds them; module
+  0x54xxx = dup of 0x12xxx).
+- Images: headerless BE-BGR565, exact-fit adjacent; image region = flash
+  0x240000+ (= file 0x4AE73A, C=0x4AE73A, 4MB logic space; 0x3f____
+  addrs = tail). NO TOC tables anywhere (verified) — all addressing is
+  runtime-computed in code.
+- Flash layout != file order (distribute table); page_template.json gives
+  lba->(rfw_off,m).
+- Fullscreen run (7): 0x8EBB00..0x95D200 incl ScreenUnlock/ScreenLock;
+  another fullscreen ScreenLists @0x8D2B42 (slide-anim draw).
+- Known families: VolBar00..40 (11x88 stride 1936 — 41 slots, k=40 maybe
+  unused), BatteryIcon0..4 (20x11 stride 440; order quirk #3=full),
+  VolIcon0..2 (12x33), ModeIconShuffle/Linear (12x22), ScrollBarTrack
+  10x176 + thumb, boot/shutdown anims (220x176).
+
+(menu injection task moved to OTHER OPEN THREADS until mapping is done)
 Plan (agreed with user):
 1. Find the real SetMenu array / SetMenuInit: search code for constants
    0x5000 (movh rX,0x50) near 0x40 shifts (language-pack offset math), or
@@ -93,6 +135,8 @@ Plan (agreed with user):
    spectrum analyzer height fix (SDK refs: subspecanal.c, specanalfft128.s).
 
 ## OTHER OPEN THREADS (user's wishlist)
+- Menu injection ("Hack" item; plan existed pre-mapping era — see git
+  history of this file if needed; SetMenu array still unfound).
 - Spectrum analyzer bars show at half height — find scale/clamp in ZSP code.
 - ПРИВЕТ word swap across boot animation frames (data patch + inpaint).
 - Automap remaining images (m3i.json has 79 hand-made entries; 40 VolBar total per operator).

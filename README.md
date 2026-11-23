@@ -56,8 +56,9 @@ stock firmware from the captured update stream.
 - [x] ZSP400 disassembler fixed & validated against the original LSI assembler
   (register fields are 4-bit; r8-r15 were previously mislabeled)
 - [ ] AutoMapper (`rkx automap`): full per-device image map from a bare .rfw
-  (v0.1 pipeline in place: decrypt + disasm + call-graph recon; draw-call
-  harvester pending)
+  (v1.0 works end-to-end on the M3i: 79 hand-mapped + 47 new images found
+  via draw-call harvesting in overlay modules, raster-validated; general
+  device support needs a base-address bootstrap without captured data)
 - [ ] ZSP code patching (spectrum analyzer height, UI behavior)
 - [ ] Native-code firmware mods via the toolchain (menu injection etc.)
 

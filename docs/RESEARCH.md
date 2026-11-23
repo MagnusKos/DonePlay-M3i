@@ -94,6 +94,35 @@ original SDK. It eventually turned up in old community archives of the
 
 Provenance details are kept in the private session notes.
 
+## Image mapping (AutoMapper, in progress)
+
+Manual mapping (the FirmwarePuller tune-by-eye method) produced 79 entries.
+We automated it by going to the source of truth: the firmware's own draw
+calls. Method, all implemented in `rkx automap`:
+
+- The UI code is not in one block — it lives in ~52 encrypted overlay
+  modules scattered through the container; they are found by scoring every
+  512-byte page under all 512 keystream rotations for code-likeness.
+- The firmware's `DisplayPicture` twin (runtime 0x1996) is called 185
+  times across those modules. A small backward slicer recovers
+  `(width, height, address)` per call site: width is an immediate in r6,
+  height is a pushed constant, the 32-bit flash address is built in an
+  even register pair (base constant + runtime index arithmetic).
+- The flash layout differs from the file order (the updater distributes
+  regions), so logic addresses are translated through the flasher's own
+  placement data. Images themselves are headerless BE-BGR565 rasters,
+  stored exact-fit adjacent — no tables anywhere; every reference is
+  computed in code.
+- Findings are validated against the hand-made map, then verified by a
+  human: a chess-labeled contact sheet (one label per image) lets the
+  operator approve/correct each entry in a single glance.
+
+Result so far on the M3i: 119 mapped images (was 79), including the
+lock/unlock screen run, the battery/volume/play-mode icon families and a
+hidden list-screen. Remaining: draws whose parameters are computed at
+runtime need real per-function dataflow, and the text/font drawing path
+is still unexplored.
+
 ## Toolchain (`rkx`)
 
 ```

@@ -477,6 +477,118 @@
    "offset": 8986074,
    "width": 11,
    "height": 88
+  },
+  {
+   "name": "VolBar27",
+   "offset": 8988010,
+   "width": 11,
+   "height": 88,
+   "source": "progression",
+   "note": ""
+  },
+  {
+   "name": "VolBar28",
+   "offset": 8989946,
+   "width": 11,
+   "height": 88,
+   "source": "progression",
+   "note": ""
+  },
+  {
+   "name": "VolBar29",
+   "offset": 8991882,
+   "width": 11,
+   "height": 88,
+   "source": "progression",
+   "note": ""
+  },
+  {
+   "name": "VolBar30",
+   "offset": 8993818,
+   "width": 11,
+   "height": 88,
+   "source": "progression",
+   "note": ""
+  },
+  {
+   "name": "VolBar31",
+   "offset": 8995754,
+   "width": 11,
+   "height": 88,
+   "source": "progression",
+   "note": ""
+  },
+  {
+   "name": "VolBar32",
+   "offset": 8997690,
+   "width": 11,
+   "height": 88,
+   "source": "progression",
+   "note": ""
+  },
+  {
+   "name": "VolBar33",
+   "offset": 8999626,
+   "width": 11,
+   "height": 88,
+   "source": "progression",
+   "note": ""
+  },
+  {
+   "name": "VolBar34",
+   "offset": 9001562,
+   "width": 11,
+   "height": 88,
+   "source": "progression",
+   "note": ""
+  },
+  {
+   "name": "VolBar35",
+   "offset": 9003498,
+   "width": 11,
+   "height": 88,
+   "source": "progression",
+   "note": ""
+  },
+  {
+   "name": "VolBar36",
+   "offset": 9005434,
+   "width": 11,
+   "height": 88,
+   "source": "progression",
+   "note": ""
+  },
+  {
+   "name": "VolBar37",
+   "offset": 9007370,
+   "width": 11,
+   "height": 88,
+   "source": "progression",
+   "note": ""
+  },
+  {
+   "name": "VolBar38",
+   "offset": 9009306,
+   "width": 11,
+   "height": 88,
+   "source": "progression",
+   "note": ""
+  },
+  {
+   "name": "VolBar39",
+   "offset": 9011242,
+   "width": 11,
+   "height": 88,
+   "source": "progression",
+   "note": ""
+  },
+  {
+   "name": "VolBar40",
+   "offset": 9013178,
+   "width": 11,
+   "height": 88,
+   "source": "progression",
+   "note": "k=40: verify — possibly unused extra slot"
   }
  ],
  "note": "imported from legacy .tl"

@@ -21,6 +21,14 @@ Read `HANDOFF.md` first in every fresh session.
   The legacy FirmwarePuller .tl format is dead — do not re-add support for
   it; only its IDEAS (e.g. hand-mapping in the GUI) may persist.
 
+## Container & artifacts discipline
+- The container is EPHEMERAL: `/tmp` is wiped on restart. Never leave
+  anything there that the operator must see or a future session needs.
+- User-facing findings (renders, contact sheets, dumps, analysis JSONs)
+  go to `REA-Session/artifacts/<topic>/` with a small README.md describing
+  the contents. Code and reusable tools go into the public repo (`src/`,
+  `scripts/`); only results/evidence live under artifacts.
+
 ## Other conventions
 - `REA-Session/` is private (nested repo, gitignored here) — never push,
   never mention its contents in public docs (README/RESEARCH.md/HANDOFF.md)
