@@ -11,6 +11,16 @@ Read `HANDOFF.md` first in every fresh session.
 - End-of-session state: changes staged, with a suggested commit message
   left in the session summary/notes.
 
+## Docs discipline
+- **README Status list**: one milestone = one checkbox. Tick `[x]` only
+  when the user-facing goal is fully achieved (e.g. AutoMapper = a bare
+  .rfw in → complete validated map out). Partial progress, WIP notes and
+  internal pipeline state belong in HANDOFF.md (technical state) or
+  REA-Session/NOTES.md (private) — never as extra status entries.
+- Map files are JSON (`rk260x-image-map/1`, handled by `src/rk260x/imgmap.py`).
+  The legacy FirmwarePuller .tl format is dead — do not re-add support for
+  it; only its IDEAS (e.g. hand-mapping in the GUI) may persist.
+
 ## Other conventions
 - `REA-Session/` is private (nested repo, gitignored here) — never push,
   never mention its contents in public docs (README/RESEARCH.md/HANDOFF.md)

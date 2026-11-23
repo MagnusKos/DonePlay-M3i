@@ -19,8 +19,6 @@ Extra keys per image (added by analysis tooling) are preserved as-is:
 (runtime code address referencing it), "source" ("hand" | "automap"),
 "confidence".
 
-Legacy FirmwarePuller .tl files (flat name/offset/w/h quadruplets) are
-importable but never written.
 """
 import json, os
 
@@ -31,27 +29,10 @@ LEGACY_KEYS = ("name", "offset", "width", "height")
 
 def load_map(path):
     """Load a map (JSON canonical, legacy .tl accepted). Returns map dict."""
-    raw = open(path, "r", encoding="utf-8", errors="replace").read()
-    stripped = raw.lstrip()
-    if stripped.startswith("{"):
-        m = json.loads(raw)
-        if m.get("format") != MAP_FORMAT:
-            raise ValueError(f"{path}: unknown map format {m.get('format')!r}")
-        return m
-    # legacy .tl: flat whitespace-separated name/offset/w/h
-    vals = raw.split()
-    images = []
-    i = 0
-    while i + 3 <= len(vals):
-        try:
-            images.append({"name": vals[i], "offset": int(vals[i+1]),
-                           "width": int(vals[i+2]), "height": int(vals[i+3])})
-            i += 4
-        except ValueError:
-            i += 1
-    return {"format": MAP_FORMAT, "device": None, "firmware": None,
-            "pixel_format": "BE-BGR565", "images": images,
-            "note": "imported from legacy .tl"}
+    m = json.loads(open(path, "r", encoding="utf-8", errors="replace").read())
+    if m.get("format") != MAP_FORMAT:
+        raise ValueError(f"{path}: unknown map format {m.get('format')!r}")
+    return m
 
 
 def save_map(path, m, device=None, firmware=None):

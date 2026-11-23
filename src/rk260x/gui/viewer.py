@@ -159,7 +159,7 @@ class App:
             self.update_status()
 
     def open_tl(self):
-        p = filedialog.askopenfilename(title='map', filetypes=[('map', '*.json'), ('legacy tl', '*.tl'), ('all', '*')])
+        p = filedialog.askopenfilename(title='map', filetypes=[('map', '*.json'), ('all', '*')])
         if p:
             self.map_path = p
             self.map = load_map(p)

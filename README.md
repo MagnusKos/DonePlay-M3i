@@ -55,6 +55,9 @@ stock firmware from the captured update stream.
   rebuilding SDK sample code (2026-11-23)
 - [x] ZSP400 disassembler fixed & validated against the original LSI assembler
   (register fields are 4-bit; r8-r15 were previously mislabeled)
+- [ ] AutoMapper (`rkx automap`): full per-device image map from a bare .rfw
+  (v0.1 pipeline in place: decrypt + disasm + call-graph recon; draw-call
+  harvester pending)
 - [ ] ZSP code patching (spectrum analyzer height, UI behavior)
 - [ ] Native-code firmware mods via the toolchain (menu injection etc.)
 

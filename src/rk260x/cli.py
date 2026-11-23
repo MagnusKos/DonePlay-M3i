@@ -85,6 +85,12 @@ def cmd_zspdis(args):
     return 0
 
 
+def cmd_automap(args):
+    from . import automap
+    automap.run(args.firmware, args.out, args.calibrate, args.recon)
+    return 0
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog='rkx', description='rk260x-tools')
     sub = ap.add_subparsers(dest='cmd', required=True)
@@ -110,8 +116,14 @@ def main(argv=None):
     p.add_argument('outdir')
 
     p = sub.add_parser('gui', help='image browser/editor')
-    p.add_argument('--map', default=None, help='image map (JSON; legacy .tl accepted)')
+    p.add_argument('--map', default=None, help='image map (JSON)')
     p.add_argument('--firmware', default=None, help='.rfw to open')
+
+    p = sub.add_parser('automap', help='automatically map UI images in firmware')
+    p.add_argument('firmware', help='.rfw firmware container')
+    p.add_argument('-o', '--out', default=None, help='output device map (JSON)')
+    p.add_argument('--calibrate', default=None, help='existing JSON map for validation')
+    p.add_argument('--recon', action='store_true', help='reconnaissance only')
 
     p = sub.add_parser('zspdis', help='ZSP400 disassembler')
     p.add_argument('binary')
@@ -122,7 +134,7 @@ def main(argv=None):
         'status': cmd_status, 'info': cmd_info, 'flash': cmd_flash,
         'build': cmd_build, 'derive': cmd_derive,
         'rfw-info': cmd_rfw_info, 'rfw-extract': cmd_rfw_extract,
-        'gui': cmd_gui, 'zspdis': cmd_zspdis,
+        'gui': cmd_gui, 'zspdis': cmd_zspdis, 'automap': cmd_automap,
     }[args.cmd](args)
 
 
