@@ -21,6 +21,8 @@ DSP** core (16-bit words, big-endian, 256 KB IRAM). NAND: Samsung K9LAG08
 3. **The firmware file** (`Firmware M3i 070930.rfw`, 9.9 MB) and a
    **usbmon capture** of a real update session (taken on Linux while the
    original updater ran in VirtualBox/XP).
+4. **The original OEM toolchain** (see "The original toolchain" below):
+   the LSI `sdspI` C compiler, assembler and linker for ZSP400.
 
 ## Findings
 
@@ -51,6 +53,13 @@ DSP** core (16-bit words, big-endian, 256 KB IRAM). NAND: Samsung K9LAG08
 ### ZSP400 tooling
 - Wrote a disassembler from the official LSI ZSP400 manual (found online):
   `src/rk260x/zspdis.py`.
+- **Bug found & fixed with the help of the original assembler**: register
+  fields are 4-bit, not 3 — r8–r15 were silently mislabeled as r0–r7 in ~43%
+  of the firmware disassembly. Validated by round-tripping assembler output
+  through `zspdis` (100% match).
+- The original assembler/compiler/linker run under wine via
+  `scripts/zsp_build.py` (asm/cc/link/elf2bin; emits big-endian images +
+  symbol maps ready to patch into the .rfw).
 
 ### UI resources
 - Images: big-endian BGR565 rasters at fixed offsets (map in
@@ -62,6 +71,28 @@ DSP** core (16-bit words, big-endian, 256 KB IRAM). NAND: Samsung K9LAG08
 - Boot/shutdown animation frame counts are single ZSP instructions
   (`movl rN, count-1`) at firmware offsets 0xF3F4 / 0x3168 — patched to
   show 1 frame: `scripts/patch_boot_frames.py`.
+
+## The original toolchain
+
+Hand-assembling ZSP400 patches was painful, so we went looking for the
+original SDK. It eventually turned up in old community archives of the
+2006–2009 player-hacking scene, complete with the OEM firmware tools:
+
+- **RockCompiler `sdspI`**: GCC-derived `sdcc`/`sdcc1`/`sdcpp`, `sdas`,
+  `sdld`, `sdar` for ZSP400 (LSI, 2005) — this is what the M3i firmware
+  itself was built with.
+- Caveats that matter when using it:
+  - object/executable files are ELF, machine `EM_ZSP` (0x4F), with section
+    data stored **word-byteswapped** — the firmware image is
+    `byteswap(.text)`;
+  - the ELF `.text` vma is runtime address + 0x9000 (linker convention);
+  - builds use `-O0` (the optimizer pass of the suite is not usable —
+    its vendor license has long expired); unoptimized output is fine for
+    firmware patching.
+- `scripts/zsp_build.py` wraps all of this: one command produces a
+  big-endian image plus a symbol map ready to be patched into the `.rfw`.
+
+Provenance details are kept in the private session notes.
 
 ## Toolchain (`rkx`)
 

@@ -13,8 +13,14 @@ Read `HANDOFF.md` first in every fresh session.
 
 ## Other conventions
 - `REA-Session/` is private (nested repo, gitignored here) — never push,
-  never mention its contents in public docs (README/RESEARCH.md) without
-  operator approval.
+  never mention its contents in public docs (README/RESEARCH.md/HANDOFF.md)
+  without operator approval.
+- **Public-docs hygiene**: README.md, docs/RESEARCH.md and HANDOFF.md are
+  PUBLIC. They must focus on the device, its firmware, and our own software.
+  They must NOT describe: how third-party software was obtained (channels,
+  sites, methods), cracks or license bypasses (or hint at them), or other
+  legally sensitive details. Such details belong only in REA-Session (private).
+  "We obtained the original OEM toolchain" is the acceptable level of detail.
 - `data/software_to_reverse/` and private artifacts stay out of the public
   history (already gitignored).
 - Hardware on desk: Explay M3i player. Treat flash operations per HANDOFF

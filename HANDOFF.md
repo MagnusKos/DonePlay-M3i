@@ -20,21 +20,19 @@ Full private notes: `REA-Session/NOTES.md` (own nested git repo, never push).
   needs re-plug after attach. Upgrade mode = hold PLAY while plugging.
 - User runs GUI (`uv run rkx gui`) on their Arch host via `venv-host`.
 
-## ZSP400 TOOLCHAIN (NEW 2026-11-23 — SDK FOUND ON OLD WEB, PHASE 1 DONE)
-Full story in REA-Session/NOTES.md. In short: the leaked "Rockchip RK260X GDK"
-(from mympxplayer.org, recovered via archive.org WARC) contains RockTools = the
-OEM firmware suite for RK260x, incl. the ORIGINAL compiler: RockCompiler/sdspI
-(sdcc/sdcc1/sdcpp/sdas/sdld/sdar — GCC-based, "ZSP Corporation", 2005,
-cygwin). Digi-in (M3i's OEM) is in FWTools' Manufacturer.ini. Toolchain tree:
-`REA-Session/artifacts/oldweb/RockTools/` (private).
+## ZSP400 TOOLCHAIN (NEW 2026-11-23 — ORIGINAL SDK LOCATED, PHASE 1 DONE)
+Provenance & full story: REA-Session/NOTES.md (PRIVATE — do not copy details
+into public docs). In short: we obtained the period-correct OEM toolchain for
+RK260x — RockCompiler/sdspI (sdcc/sdcc1/sdcpp/sdas/sdld/sdar, GCC-based,
+LSI/ZSP, 2005, cygwin) — tree at `REA-Session/artifacts/oldweb/RockTools/`.
 - Runner: `scripts/zsp_build.py` (asm/cc/link/elf2bin/build) — runs tools under
   wine (`wine wine32` installed; prefix ~/.wine-rocktools).
-- Env: `SDSP_HOME=Z:\...\RockCompiler\` (set by the script). License: FlexLM
-  `rockchipSDK` file (G1 pkg incl SDOPT) EXPIRED 2006-07-07 → sdopt (the -O
-  pass) fails; needs `faketime` or crack. Everything else (sdcc/sdas/sdld) is
-  license-free and VERIFIED: torture-asm round-trips byte-identical through
-  `rkx zspdis`; C compiles+links with crt0+libc; Snake (GDK game) rebuilds
-  with matching function order (size differs: original used sdopt/-O).
+- Env: `SDSP_HOME=Z:\\...\\RockCompiler\\` (set by the script).
+- VERIFIED: torture-asm round-trips byte-identical through `rkx zspdis`;
+  C compiles+links with crt0+libc; SDK sample game rebuilds with matching
+  function order (optimized pipeline available via the mechanism-neutral
+  `--sdopt WRAPPER` hook in zsp_build.py; wrapper setup = private, see
+  REA-Session/scripts/sdopt_chrono.sh).
 - ELF quirk: EM_ZSP (0x4F) objects store section data WORD-BYTESWAPPED;
   firmware image = byteswap(.text). ELF .text vma 0x12000 ↔ runtime 0x9000
   (vma-offset 0x9000). zsp_build.py handles this.

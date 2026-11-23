@@ -116,6 +116,10 @@ def main():
         p.add_argument("src")
         p.add_argument("-o", "--out")
         p.add_argument("-I", action="append", default=[])
+        p.add_argument("--sdopt", metavar="WRAPPER",
+                       help="run the optimizer stage through this wrapper "
+                            "(called as: WRAPPER in.s out.q [args...]); "
+                            "enables the 3-stage cc -> opt -> asm pipeline")
     p = sub.add_parser("link")
     p.add_argument("objs", nargs="+")
     p.add_argument("--lcf", required=True)
@@ -133,6 +137,8 @@ def main():
     p.add_argument("-o", "--out", required=True)
     p.add_argument("--crt0", action="store_true")
     p.add_argument("--keep", action="store_true")
+    p.add_argument("--sdopt", metavar="WRAPPER",
+                   help="optimizer wrapper (WRAPPER in.s out.q) for .c sources")
     args = ap.parse_args()
     sdsp = rocktools(args)
     tmp = tempfile.mkdtemp(prefix="zspbuild_")
@@ -141,6 +147,14 @@ def main():
         out = args.out or os.path.splitext(args.src)[0] + ".obj"
         if args.cmd == "asm":
             run(sdsp, "sdas", "-o", out, args.src)
+        elif getattr(args, "sdopt", None):
+            s_file = os.path.splitext(out)[0] + ".s"
+            q_file = os.path.splitext(out)[0] + ".q"
+            inc = [i for I in args.I for i in ("-I", I)]
+            inc += ["-I", os.path.join(sdsp, "include")]
+            run(sdsp, "sdcc", "-O", "-S", args.src, "-o", s_file, *inc)
+            subprocess.run([args.sdopt, s_file, q_file], check=True)
+            run(sdsp, "sdas", "-o", out, q_file)
         else:
             inc = [i for I in args.I for i in ("-I", I)]
             inc += ["-I", os.path.join(sdsp, "include")]
@@ -164,6 +178,13 @@ def main():
             obj = base + ".obj"
             if src.endswith(".s"):
                 run(sdsp, "sdas", "-o", obj, src)
+            elif getattr(args, "sdopt", None):
+                s_file, q_file = base + ".s", base + ".q"
+                run(sdsp, "sdcc", "-O", "-S", src, "-o", s_file,
+                    "-I", os.path.dirname(os.path.abspath(src)),
+                    "-I", os.path.join(sdsp, "include"))
+                subprocess.run([args.sdopt, s_file, q_file], check=True)
+                run(sdsp, "sdas", "-o", obj, q_file)
             else:
                 run(sdsp, "sdcc", "-c", src, "-o", obj,
                     "-I", os.path.dirname(os.path.abspath(src)),
