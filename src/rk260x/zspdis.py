@@ -29,9 +29,9 @@ def disasm_word(w, nextw=None):
         imm = sx(w & 0x7FF, 11)
         return f"call {imm}", 1
     if op == 0x2:
-        return f"movl r{(w>>8)&7}, {w&0xFF}", 1
+        return f"movl r{(w>>8)&0xF}, {w&0xFF}", 1
     if op == 0x3:
-        return f"movh r{(w>>8)&7}, {w&0xFF}", 1
+        return f"movh r{(w>>8)&0xF}, {w&0xFF}", 1
     if op == 0x4:
         cond = (w >> 8) & 7
         inv = (w >> 11) & 1
@@ -40,10 +40,10 @@ def disasm_word(w, nextw=None):
     if op in (0x5, 0xE):
         o = (w >> 8) & 0xF
         ab = '.b' if w & 0x800 else '.a'
-        return f"{OP0[o]}{ab} r{(w>>4)&7}, r{w&7}", 1
+        return f"{OP0[o]}{ab} r{(w>>4)&0xF}, r{w&0xF}", 1
     if op == 0x6:
         o = (w >> 8) & 0xF
-        rx, ry = (w>>4)&7, w&7
+        rx, ry = (w>>4)&0xF, w&0xF
         mn = OP1_ST.get(o, f"st?")
         if o == 0:
             return f"st r{rx}, r{ry}", 1
@@ -51,7 +51,7 @@ def disasm_word(w, nextw=None):
         return f"{mn} r{rx}, r{ry}, {off}", 1
     if op == 0x7:
         o = (w >> 8) & 0xF
-        rx, ry = (w>>4)&7, w&7
+        rx, ry = (w>>4)&0xF, w&0xF
         mn = OP1_LD.get(o, f"ld?")
         if o == 0:
             return f"ld r{rx}, (r{ry}+0)", 1
@@ -59,17 +59,18 @@ def disasm_word(w, nextw=None):
         return f"{mn} r{rx}, (r{ry}{off})", 1
     if op == 0x8:
         o = (w >> 8) & 0xF
-        return f"{OP2[o]} r{(w>>4)&7}, r{w&7}", 1
+        return f"{OP2[o]} r{(w>>4)&0xF}, r{w&0xF}", 1
     if op == 0x9:
+        # extended alu: op3(4) rX.e(3) 0 rY.e(3) 0, consumes two words
         o = (w >> 8) & 0xF
-        return f"{OP2[o]}.e ??r{(w>>4)&7} [ext-pair]", 2
+        return f"{OP2[o]}.e r{(w>>5)&7}, r{(w>>1)&7} [ext-pair]", 2
     if op == 0xA:
         o = (w >> 8) & 0xF
         imm = sx(w & 0xF, 4)
-        if o == 6: return f"mov r{(w>>4)&7}, {imm}", 1
-        if o == 7: return f"call r{(w>>4)&7}", 1
-        if o in (8,9,10,11): return f"{OP4[o]} r{(w>>4)&7}, {imm&0xF}", 1
-        return f"{OP4[o]} r{(w>>4)&7}, {imm}", 1
+        if o == 6: return f"mov r{(w>>4)&0xF}, {imm}", 1
+        if o == 7: return f"call r{(w>>4)&0xF}", 1
+        if o in (8,9,10,11): return f"{OP4[o]} r{(w>>4)&0xF}, {imm&0xF}", 1
+        return f"{OP4[o]} r{(w>>4)&0xF}, {imm}", 1
     if op == 0xB:
         sub = (w >> 8) & 0xF
         if w == 0xBF01: return "ret", 1
@@ -77,17 +78,18 @@ def disasm_word(w, nextw=None):
         if sub <= 7:
             key = ((w>>10)&1, (w>>9)&1, (w>>8)&1)
             mn = OP5.get(key, 'alu.e?')
-            if key == (0,0,1): return f"cmp.e r{(w>>4)&7}, {sx(w&0xF,4)}", 1
-            if key in ((0,1,0),(0,1,1),(1,0,0),(1,0,1)): return f"{mn} r{(w>>4)&7}, {w&0xF}", 1
-            return f"{mn} r{(w>>4)&7}, r{w&7}", 1
-        if sub == 8: return f"mov r{(w>>4)&7}, c{w&7}", 1
-        if sub == 9: return f"mov c{(w>>4)&7}, r{w&7}", 1
-        if sub == 12: return f"mov r{(w>>4)&7}, r{w&7}", 1
+            if key == (0,0,1): return f"cmp.e r{(w>>5)&7}, {sx(w&0xF,4)}", 1
+            if key in ((0,1,0),(0,1,1),(1,0,0),(1,0,1)): return f"{mn} r{(w>>5)&7}, {w&0xF}", 1
+            return f"{mn} r{(w>>5)&7}, r{(w>>1)&7}", 1
+        if sub == 8: return f"mov r{w&0xF}, c{(w>>4)&0xF}", 1
+        if sub == 0xA: return f"mov c{(w>>4)&0xF}, r{w&0xF}", 1
+        if sub == 12: return f"mov r{(w>>4)&0xF}, r{w&0xF}", 1
         return f"reserved_{b}", 1
     if op == 0xC:
         o = (w >> 8) & 0xF
         mn = OP6.get(o, 'misc?')
-        return f"{mn} r{(w>>4)&7}, {w&0xF}", 1
+        if o == 0xF and (w & 0xFF) == 0: return "nop", 1
+        return f"{mn} r{(w>>4)&0xF}, {w&0xF}", 1
     if op in (0xD,):
         return f"mov{'h' if w&0x0800 else 'l'} c{(w>>8)&7}, {w&0xFF}", 1
     if op == 0xF:
