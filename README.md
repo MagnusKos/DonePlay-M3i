@@ -50,7 +50,14 @@ stock firmware from the captured update stream.
 - [x] NAND ECC/spare computation for arbitrary data - validated on corpus
 - [x] Custom firmware pipeline (modify .rfw -> build -> flash) - **verified on-device** (boot animation frame edited, flashed, player boots normally, 2026-11-23)
 - [x] UI image map + GUI editor (.tl format, verified offsets)
+- [x] Original OEM toolchain recovered from old-web archives (2009 "Rockchip
+  RK260X GDK" → RockTools: GCC/sdas/sdld for ZSP400) — operational under wine
+  via `scripts/zsp_build.py`, validated against the shipped 2006 build
+  artifacts of the SDK's Snake game (2026-11-23)
+- [x] ZSP400 disassembler fixed & validated against the original LSI assembler
+  (register fields are 4-bit; r8-r15 were previously mislabeled)
 - [ ] ZSP code patching (spectrum analyzer height, UI behavior)
+- [ ] Native-code firmware mods via the toolchain (menu injection etc.)
 
 ## rk260x-tools
 
@@ -101,8 +108,12 @@ src/rk260x/
   gui/viewer.py firmware image browser/editor (.tl maps, PNG import/export,
                 chunk stepping, map editing)
 data/           runtime assets (XOR key, ROM-download payloads)
-scripts/        one-off analysis helpers
 derived/        generated artifacts (gitignored; created by `rkx derive`)
+scripts/
+  zsp_build.py  build ZSP400 code with the recovered RockTools sdspI
+                toolchain under wine (asm/cc/link/elf2bin; emits BE images
+                + symbol maps ready for firmware patching)
+  (other)       one-off analysis helpers
 ```
 
 ## USB access

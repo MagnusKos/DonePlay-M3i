@@ -20,6 +20,30 @@ Full private notes: `REA-Session/NOTES.md` (own nested git repo, never push).
   needs re-plug after attach. Upgrade mode = hold PLAY while plugging.
 - User runs GUI (`uv run rkx gui`) on their Arch host via `venv-host`.
 
+## ZSP400 TOOLCHAIN (NEW 2026-11-23 — SDK FOUND ON OLD WEB, PHASE 1 DONE)
+Full story in REA-Session/NOTES.md. In short: the leaked "Rockchip RK260X GDK"
+(from mympxplayer.org, recovered via archive.org WARC) contains RockTools = the
+OEM firmware suite for RK260x, incl. the ORIGINAL compiler: RockCompiler/sdspI
+(sdcc/sdcc1/sdcpp/sdas/sdld/sdar — GCC-based, "ZSP Corporation", 2005,
+cygwin). Digi-in (M3i's OEM) is in FWTools' Manufacturer.ini. Toolchain tree:
+`REA-Session/artifacts/oldweb/RockTools/` (private).
+- Runner: `scripts/zsp_build.py` (asm/cc/link/elf2bin/build) — runs tools under
+  wine (`wine wine32` installed; prefix ~/.wine-rocktools).
+- Env: `SDSP_HOME=Z:\...\RockCompiler\` (set by the script). License: FlexLM
+  `rockchipSDK` file (G1 pkg incl SDOPT) EXPIRED 2006-07-07 → sdopt (the -O
+  pass) fails; needs `faketime` or crack. Everything else (sdcc/sdas/sdld) is
+  license-free and VERIFIED: torture-asm round-trips byte-identical through
+  `rkx zspdis`; C compiles+links with crt0+libc; Snake (GDK game) rebuilds
+  with matching function order (size differs: original used sdopt/-O).
+- ELF quirk: EM_ZSP (0x4F) objects store section data WORD-BYTESWAPPED;
+  firmware image = byteswap(.text). ELF .text vma 0x12000 ↔ runtime 0x9000
+  (vma-offset 0x9000). zsp_build.py handles this.
+- **zspdis.py FIXED**: register fields are 4-bit (r0-r15), old code masked &7
+  → r8-r15 were mislabeled as r0-r7 (43% of main-fw disasm lines changed!).
+  Also mov cX,rY = 0xBAxx (not B9), ext-ALU .e regs are 3-bit at (w>>5)/(w>>1).
+  /tmp/main_dis.txt regenerated (base 0x1490). Old register-level analysis
+  from notes may need re-reading; imm-only patches (anim counts) unaffected.
+
 ## Current state (all verified on-device)
 - Full toolchain works: decrypt .rfw, edit images (GUI), edit code (byte patches),
   rebuild with auto-ECC, flash, unbrick recovery (`uv run rkx flash`).
