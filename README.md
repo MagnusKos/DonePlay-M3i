@@ -33,7 +33,7 @@ Samsung K9LAG08 MLC NAND (2 GB), 220x176 TFT. Flash ID on device: `ec d5 55 25 0
 - **Firmware container (.rfw)**: XOR-encrypted blocks (one global 512-byte key,
   per-block keystream anchors); on-flash content is stored encrypted as-is.
 - **UI images**: big-endian BGR565 rasters at the offsets listed in
-  `data/captures/m3i.tl` (map by FirmwarePuller, verified exact).
+  `data/captures/m3i.json` (per-device JSON map; originally hand-mapped, verified exact).
 
 ## Recovery
 
@@ -49,7 +49,7 @@ stock firmware from the captured update stream.
 - [x] .rfw crypto (XOR key, block anchors), firmware stages extracted
 - [x] NAND ECC/spare computation for arbitrary data - validated on corpus
 - [x] Custom firmware pipeline (modify .rfw -> build -> flash) - **verified on-device** (boot animation frame edited, flashed, player boots normally, 2026-11-23)
-- [x] UI image map + GUI editor (.tl format, verified offsets)
+- [x] UI image map + GUI editor (per-device JSON maps, verified offsets)
 - [x] Original OEM toolchain for ZSP400 (compiler/assembler/linker) located
   & operational under wine via `scripts/zsp_build.py`; validated by
   rebuilding SDK sample code (2026-11-23)
@@ -91,7 +91,7 @@ uv run rkx rfw-extract firmware.rfw outdir/    # decrypt code stages
 uv run rkx derive update.pcapng --rfw original.rfw
 
 # GUI image browser/editor (needs a display)
-uv run rkx gui --map m3i.tl
+uv run rkx gui --map m3i.json
 ```
 
 ## Layout
@@ -104,7 +104,7 @@ src/rk260x/
   rfw.py        .rfw container: parse, XOR decrypt, stage extraction
   zspdis.py     ZSP400 disassembler
   cli.py        `rkx` entry point
-  gui/viewer.py firmware image browser/editor (.tl maps, PNG import/export,
+  gui/viewer.py firmware image browser/editor (JSON maps, PNG import/export,
                 chunk stepping, map editing)
 data/           runtime assets (XOR key, ROM-download payloads)
 derived/        generated artifacts (gitignored; created by `rkx derive`)

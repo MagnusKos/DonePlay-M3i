@@ -7,32 +7,12 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog
 from PIL import Image, ImageTk
 
-
-
-import os
-import struct
-import subprocess
-import sys
-import tkinter as tk
-from tkinter import filedialog, messagebox, simpledialog
-from PIL import Image, ImageTk
-
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(HERE, '..', '..'))
+from rk260x.imgmap import load_map, save_map, rows_of, map_from_rows
+
 FW_DEFAULT = os.environ.get('RK260X_FW') or os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'data', 'firmwares', 'Firmware M3i 070930.rfw')
-TL_DEFAULT = os.environ.get('RK260X_TL') or os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'data', 'captures', 'm3i.tl')
-
-
-def parse_tl(path):
-    vals = open(path).read().split()
-    entries = []
-    i = 0
-    while i + 3 <= len(vals):
-        try:
-            entries.append([vals[i], int(vals[i+1]), int(vals[i+2]), int(vals[i+3])])
-            i += 4
-        except ValueError:
-            i += 1
-    return entries
+MAP_DEFAULT = os.environ.get('RK260X_MAP') or os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'data', 'captures', 'm3i.json')
 
 
 class FWImage:
@@ -61,7 +41,8 @@ class App:
         root.title('M3i firmware image editor')
         self.fw = bytearray()
         self.entries = []
-        self.tl_path = TL_DEFAULT
+        self.map_path = MAP_DEFAULT
+        self.map = None
         self.modified = set()
         self.filter_text = ''
         self.view = {'off': 0, 'w': 220, 'h': 176}   # custom view state
@@ -74,7 +55,7 @@ class App:
         # toolbar
         top = tk.Frame(self.root); top.pack(fill=tk.X, padx=4, pady=2)
         tk.Button(top, text='Open firmware', command=self.open_fw).pack(side=tk.LEFT)
-        tk.Button(top, text='Open map (.tl)', command=self.open_tl).pack(side=tk.LEFT)
+        tk.Button(top, text='Open map', command=self.open_tl).pack(side=tk.LEFT)
         tk.Button(top, text='Save firmware as...', command=self.save_fw).pack(side=tk.LEFT, padx=(16, 0))
         tk.Button(top, text='Export PNG', command=self.export_png).pack(side=tk.LEFT)
         tk.Button(top, text='Import PNG', command=self.import_png).pack(side=tk.LEFT)
@@ -100,7 +81,7 @@ class App:
         tk.Button(crow, text='next chunk >', command=lambda: self.step_chunk(1)).pack(side=tk.LEFT)
         tk.Button(crow, text='Add view to map', command=self.add_to_map).pack(side=tk.LEFT, padx=(16, 0))
         tk.Button(crow, text='Remove entry', command=self.remove_entry).pack(side=tk.LEFT)
-        tk.Button(crow, text='Save map (.tl)', command=self.save_tl).pack(side=tk.LEFT)
+        tk.Button(crow, text='Save map (JSON)', command=self.save_tl).pack(side=tk.LEFT)
         # main area
         main = tk.Frame(self.root); main.pack(fill=tk.BOTH, expand=True)
         sb = tk.Scrollbar(main)
@@ -122,8 +103,9 @@ class App:
         # defaults
         if os.path.exists(FW_DEFAULT) and not self.fw:
             self.fw = bytearray(open(FW_DEFAULT, 'rb').read())
-        if os.path.exists(self.tl_path):
-            self.entries = parse_tl(self.tl_path)
+        if os.path.exists(self.map_path):
+            self.map = load_map(self.map_path)
+            self.entries = rows_of(self.map)
         self.refresh()
 
     # ------------------------------------------------------------- helpers
@@ -177,10 +159,11 @@ class App:
             self.update_status()
 
     def open_tl(self):
-        p = filedialog.askopenfilename(title='map (.tl)', filetypes=[('tl', '*.tl'), ('all', '*')])
+        p = filedialog.askopenfilename(title='map', filetypes=[('map', '*.json'), ('legacy tl', '*.tl'), ('all', '*')])
         if p:
-            self.tl_path = p
-            self.entries = parse_tl(p)
+            self.map_path = p
+            self.map = load_map(p)
+            self.entries = rows_of(self.map)
             self.refresh()
 
     def view_custom(self):
@@ -223,13 +206,13 @@ class App:
         self.refresh()
 
     def save_tl(self):
-        p = filedialog.asksaveasfilename(defaultextension='.tl', initialfile='m3i_full.tl')
+        p = filedialog.asksaveasfilename(defaultextension='.json', initialfile='m3i_full.json')
         if not p:
             return
-        with open(p, 'w') as f:
-            for name, off, w, h in self.entries:
-                f.write(f'{name}\n{off}\n{w}\n{h}\n')
-        self.tl_path = p
+        save_map(p, map_from_rows(self.entries, self.map),
+                 device=(self.map or {}).get('device'),
+                 firmware=(self.map or {}).get('firmware'))
+        self.map_path = p
         self.update_status(f'map saved: {p}')
 
     def export_png(self):
@@ -326,7 +309,8 @@ class App:
 def run(map_path=None, firmware_path=None):
     global TL_DEFAULT, FW_DEFAULT
     if map_path:
-        TL_DEFAULT = map_path
+        global MAP_DEFAULT
+        MAP_DEFAULT = map_path
     if firmware_path:
         FW_DEFAULT = firmware_path
     root = tk.Tk()

@@ -62,7 +62,7 @@ LSI/ZSP, 2005, cygwin) — tree at `REA-Session/artifacts/oldweb/RockTools/`.
 - BOOT anim loop: .rfw 0xF390-0xF400; frame count-1 at **0xF3F4** (`movl r2,23`, stock 24 frames).
 - SHUTDOWN anim loop: 0x3114-0x3174; count-1 at **0x3168** (`movl r0,11`, stock 12 frames).
 - Anim frame i at NAND image offset i*77440 (0x12E40); frames are BE-BGR565 220x176
-  rasters (also referenced by data/captures/m3i.tl map).
+  rasters (also referenced by data/captures/m3i.json map).
 
 ### Menu/UI strings
 - UTF-16LE, 64-byte slots. Settings pack (English): items Music@0x4a6dbd,
@@ -95,7 +95,7 @@ Plan (agreed with user):
 ## OTHER OPEN THREADS (user's wishlist)
 - Spectrum analyzer bars show at half height — find scale/clamp in ZSP code.
 - ПРИВЕТ word swap across boot animation frames (data patch + inpaint).
-- Complete m3i.tl map (GUI has chunk-stepping map editor).
+- Automap remaining images (m3i.json has 79 hand-made entries; 40 VolBar total per operator).
 - 0x38-0x68F .rfw config block cipher (unknown, not XOR-K).
 - RKFW_HS.A SDK libs + P.img (beyond 0x110) encryption.
 

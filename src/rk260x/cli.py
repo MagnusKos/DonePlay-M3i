@@ -110,7 +110,7 @@ def main(argv=None):
     p.add_argument('outdir')
 
     p = sub.add_parser('gui', help='image browser/editor')
-    p.add_argument('--map', default=None, help='.tl map')
+    p.add_argument('--map', default=None, help='image map (JSON; legacy .tl accepted)')
     p.add_argument('--firmware', default=None, help='.rfw to open')
 
     p = sub.add_parser('zspdis', help='ZSP400 disassembler')

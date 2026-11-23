@@ -63,7 +63,7 @@ DSP** core (16-bit words, big-endian, 256 KB IRAM). NAND: Samsung K9LAG08
 
 ### UI resources
 - Images: big-endian BGR565 rasters at fixed offsets (map in
-  `data/captures/m3i.tl`, verified exact); boot animation = 24 frames of
+  `data/captures/m3i.json`, verified exact); boot animation = 24 frames of
   ПРИВЕТ growing; strings: UTF-16LE, 64-byte slots, language packs 0x5000
   apart.
 
@@ -100,7 +100,7 @@ Provenance details are kept in the private session notes.
 uv run rkx status          # detect player
 uv run rkx flash           # flash stock (recovery) / custom .rfw
 uv run rkx build X.rfw out # build flash stream (auto ECC)
-uv run rkx gui             # image browser/editor (.tl maps, PNG import)
+uv run rkx gui             # image browser/editor (JSON maps, PNG import)
 uv run rkx rfw-info ...    # container analysis
 ```
 

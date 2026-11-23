@@ -1,0 +1,483 @@
+{
+ "format": "rk260x-image-map/1",
+ "device": null,
+ "firmware": null,
+ "pixel_format": "BE-BGR565",
+ "images": [
+  {
+   "name": "FullscreenBatteryEmpty",
+   "offset": 4908858,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenBatteryLow",
+   "offset": 4986298,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenBatteryMid",
+   "offset": 5063738,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenBatteryFull",
+   "offset": 5141178,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenUSBMode",
+   "offset": 5218618,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenBoot1",
+   "offset": 5296058,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenBoot2",
+   "offset": 5373498,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenBoot3",
+   "offset": 5450938,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenBoot4",
+   "offset": 5528378,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenBoot5",
+   "offset": 5605818,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenBoot6",
+   "offset": 5683258,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenBoot7",
+   "offset": 5760698,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenBoot8",
+   "offset": 5838138,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenBoot9",
+   "offset": 5915578,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenBoot10",
+   "offset": 5993018,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenBoot11",
+   "offset": 6070458,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenBoot12",
+   "offset": 6147898,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenBoot13",
+   "offset": 6225338,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenBoot14",
+   "offset": 6302778,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenBoot15",
+   "offset": 6380218,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenBoot16",
+   "offset": 6457658,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenBoot17",
+   "offset": 6535098,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenBoot18",
+   "offset": 6612538,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenBoot19",
+   "offset": 6689978,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenBoot20",
+   "offset": 6767418,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenBoot21",
+   "offset": 6844858,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenBoot22",
+   "offset": 6922298,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenBoot23",
+   "offset": 6999738,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenBoot24",
+   "offset": 7077178,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenShutdown1",
+   "offset": 7154618,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenShutdown2",
+   "offset": 7232058,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenShutdown3",
+   "offset": 7309498,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenShutdown4",
+   "offset": 7386938,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenShutdown5",
+   "offset": 7464378,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenShutdown6",
+   "offset": 7541818,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenShutdown7",
+   "offset": 7619258,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenShutdown8",
+   "offset": 7696698,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenShutdown9",
+   "offset": 7774138,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenShutdown10",
+   "offset": 7851578,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenShutdown11",
+   "offset": 7929018,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "FullscreenShutdown12",
+   "offset": 8006458,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "MenuMusic",
+   "offset": 8083898,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "MenuVideo",
+   "offset": 8161338,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "MenuPhoto",
+   "offset": 8238778,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "MenuBook",
+   "offset": 8316218,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "MenuRecord",
+   "offset": 8393658,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "MenuFiles",
+   "offset": 8471098,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "MenuGame",
+   "offset": 8548538,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "MenuSettings",
+   "offset": 8625978,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "MenuSettingsDup",
+   "offset": 8703418,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "MusicPlayScreen",
+   "offset": 8780858,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "MusicPlayScreenDup",
+   "offset": 8858298,
+   "width": 220,
+   "height": 176
+  },
+  {
+   "name": "VolBar00",
+   "offset": 8935738,
+   "width": 11,
+   "height": 88
+  },
+  {
+   "name": "VolBar01",
+   "offset": 8937674,
+   "width": 11,
+   "height": 88
+  },
+  {
+   "name": "VolBar02",
+   "offset": 8939610,
+   "width": 11,
+   "height": 88
+  },
+  {
+   "name": "VolBar03",
+   "offset": 8941546,
+   "width": 11,
+   "height": 88
+  },
+  {
+   "name": "VolBar04",
+   "offset": 8943482,
+   "width": 11,
+   "height": 88
+  },
+  {
+   "name": "VolBar05",
+   "offset": 8945418,
+   "width": 11,
+   "height": 88
+  },
+  {
+   "name": "VolBar06",
+   "offset": 8947354,
+   "width": 11,
+   "height": 88
+  },
+  {
+   "name": "VolBar07",
+   "offset": 8949290,
+   "width": 11,
+   "height": 88
+  },
+  {
+   "name": "VolBar08",
+   "offset": 8951226,
+   "width": 11,
+   "height": 88
+  },
+  {
+   "name": "VolBar09",
+   "offset": 8953162,
+   "width": 11,
+   "height": 88
+  },
+  {
+   "name": "VolBar10",
+   "offset": 8955098,
+   "width": 11,
+   "height": 88
+  },
+  {
+   "name": "VolBar11",
+   "offset": 8957034,
+   "width": 11,
+   "height": 88
+  },
+  {
+   "name": "VolBar12",
+   "offset": 8958970,
+   "width": 11,
+   "height": 88
+  },
+  {
+   "name": "VolBar13",
+   "offset": 8960906,
+   "width": 11,
+   "height": 88
+  },
+  {
+   "name": "VolBar14",
+   "offset": 8962842,
+   "width": 11,
+   "height": 88
+  },
+  {
+   "name": "VolBar15",
+   "offset": 8964778,
+   "width": 11,
+   "height": 88
+  },
+  {
+   "name": "VolBar16",
+   "offset": 8966714,
+   "width": 11,
+   "height": 88
+  },
+  {
+   "name": "VolBar17",
+   "offset": 8968650,
+   "width": 11,
+   "height": 88
+  },
+  {
+   "name": "VolBar18",
+   "offset": 8970586,
+   "width": 11,
+   "height": 88
+  },
+  {
+   "name": "VolBar19",
+   "offset": 8972522,
+   "width": 11,
+   "height": 88
+  },
+  {
+   "name": "VolBar20",
+   "offset": 8974458,
+   "width": 11,
+   "height": 88
+  },
+  {
+   "name": "VolBar21",
+   "offset": 8976394,
+   "width": 11,
+   "height": 88
+  },
+  {
+   "name": "VolBar22",
+   "offset": 8978330,
+   "width": 11,
+   "height": 88
+  },
+  {
+   "name": "VolBar23",
+   "offset": 8980266,
+   "width": 11,
+   "height": 88
+  },
+  {
+   "name": "VolBar24",
+   "offset": 8982202,
+   "width": 11,
+   "height": 88
+  },
+  {
+   "name": "VolBar25",
+   "offset": 8984138,
+   "width": 11,
+   "height": 88
+  },
+  {
+   "name": "VolBar26",
+   "offset": 8986074,
+   "width": 11,
+   "height": 88
+  }
+ ],
+ "note": "imported from legacy .tl"
+}
