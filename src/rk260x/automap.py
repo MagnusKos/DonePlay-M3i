@@ -485,6 +485,74 @@ def curate(cands, verdicts, rejects=()):
     return out, purged
 
 
+def expand_families(rfw, images, trusted_spans, sym_sites=None, max_k=63,
+                    min_area=16):
+    """Family expansion — the VolBar progression method, generalized.
+
+    From every mapped seed, walk exact-stride slots (stride = w*h*2,
+    exact-fit tiling) and add slots while raster quality holds:
+      * absolute floor: vsmooth > 0.10 and distinct colors >= 5
+      * SHARP-DROP rule: vsmooth >= 0.55 * running median (VolBar:
+        0.86-0.89 for k=0..40, 0.20 at k=41 -> stop, no k=41)
+      * stop on file end, cap max_k, or when the slot region overlaps a
+        TRUSTED span belonging to another image
+      * slots already mapped with the same (w,h) are walked THROUGH
+        (family passing through mapped territory), never re-added
+    New slots get source='progression' with family metadata (seed, stride,
+    k, per-slot raster stats) and sym-site corroboration counts.
+    """
+    import statistics
+    existing = {(i['offset']): i for i in images}
+    taken = set()
+    sym_by_size = {}
+    if sym_sites:
+        for s in sym_sites:
+            if s.get('w') and s.get('h'):
+                key = (s['w'], s['h'])
+                sym_by_size[key] = sym_by_size.get(key, 0) + 1
+    new_images, fam_meta = [], []
+    for seed in sorted(images, key=lambda i: i['offset']):
+        w, h, so = seed['width'], seed['height'], seed['offset']
+        if w * h < min_area:
+            continue
+        stride = w * h * 2
+        ve0, c0 = raster_quality(rfw, so, w, h)
+        if ve0 <= 0.10 or c0 < 5:
+            continue                      # seed itself must be good
+        ves = [ve0]
+        added_here = 0
+        for k in range(1, max_k + 1):
+            off = so + k * stride
+            if off + stride > len(rfw):
+                break
+            ex = existing.get(off)
+            if ex is not None:
+                if (ex['width'], ex['height']) == (w, h):
+                    continue              # mapped family member: walk through
+                break                     # region belongs to something else
+            if any(off < te and off + stride > ts for ts, te in trusted_spans):
+                break                     # overlaps trusted image: stop
+            if off in taken:
+                continue
+            ve, colors = raster_quality(rfw, off, w, h)
+            med = statistics.median(ves)
+            if ve <= 0.10 or colors < 5 or ve < 0.55 * med:
+                break                     # sharp drop / garbage
+            ves.append(ve)
+            taken.add(off)
+            added_here += 1
+            new_images.append({
+                'name': f'prog_{off:06x}_{w}x{h}', 'offset': off,
+                'width': w, 'height': h, 'source': 'progression',
+                'family': {'seed': so, 'stride': stride, 'k': k,
+                           'vsmooth': round(ve, 3), 'colors': colors,
+                           'sym_sites': sym_by_size.get((w, h), 0)}})
+        if added_here:
+            fam_meta.append({'seed': so, 'w': w, 'h': h, 'stride': stride,
+                             'added': added_here})
+    return new_images, fam_meta
+
+
 def run_full(path, out=None, calibrate_map=None, linear=False, verdicts=None,
              rejects=None):
     rfw = open(path, 'rb').read()
@@ -540,6 +608,17 @@ def run_full(path, out=None, calibrate_map=None, linear=False, verdicts=None,
     for im in cal_images:
         if im['offset'] not in {i['offset'] for i in images}:
             images.append(dict(im, source='hand'))
+    # family expansion (S2): progression continuation from every seed
+    trusted = list(cal_images)
+    if verdicts:
+        trusted += load_map(verdicts)['images']
+    spans = sorted((i['offset'], i['offset'] + i['width'] * i['height'] * 2)
+                   for i in trusted)
+    fam_images, fam_meta = expand_families(rfw, images, spans,
+                                           sym_sites=[s for s in slices
+                                                      if s.get('addrsym')
+                                                      or s.get('hsym')])
+    images += fam_images
     purged = 0
     rejects_used = []
     if verdicts:
@@ -553,6 +632,7 @@ def run_full(path, out=None, calibrate_map=None, linear=False, verdicts=None,
          'firmware': os.path.basename(path), 'pixel_format': 'BE-BGR565',
          'logic_base_file_offset': C,
          'images': images,
+         'families': fam_meta,
          'note': f'automap v1.0: {len(images)} images '
                  f'({sum(1 for i in images if i.get("source") == "automap")} new), '
                  f'{rejected} candidates rejected by raster validation'

@@ -742,6 +742,14 @@
    "note": "operator round4: list screen in file manager"
   },
   {
+   "name": "ScreenFileList2",
+   "offset": 9146270,
+   "width": 220,
+   "height": 176,
+   "source": "progression",
+   "note": "operator round5: another list screen (family k=1 after ScreenFileList)"
+  },
+  {
    "name": "ScreenLists",
    "offset": 9251650,
    "width": 220,
