@@ -266,11 +266,48 @@ def instructions_of(blob, base):
             for ln in disasm(blob, base) if (m := pat.match(ln))]
 
 
-def harvest_draw_sites(rfw, key, draw_targets=(0x1996, 0x1980)):
+def harvest_draw_sites(rfw, key, draw_targets=(0x1996, 0x1980), linear=False):
     """Slice every call to the draw function across resident code and all
-    discovered overlay modules. Returns list of slice dicts."""
-    results = []
+    discovered overlay modules. Returns list of slice dicts.
+    Default: per-function CFG + dataflow (dataflow.py). linear=True: the
+    original linear-window slicer (regression baseline)."""
+    from rk260x.dataflow import parse_lines, harvest_dataflow
     res = rfwmod.xor_block(rfw[0x1490:0xFA88], key, 172, offset=0x1490)
+    if not linear:
+        regions = [('resident', parse_lines(disasm(res, 0x1490)))]
+        seen = set()
+        for st, en, anchor in find_code_runs(rfw, key):
+            blob = decrypt_run(rfw, key, st, en, anchor)
+            h = hash(blob)
+            if h in seen:          # duplicate overlay module (0x54xxx == 0x12xxx)
+                continue
+            seen.add(h)
+            regions.append((f'ovl_{st:06x}', parse_lines(disasm(blob, st))))
+        dflow = harvest_dataflow(regions, draw_targets)
+        # linear baseline preservation: every site the linear slicer folds
+        # keeps its exact values (S1 no-regression contract); dataflow adds
+        # the rest and attaches symbolic annotations.
+        linsites = _harvest_linear(rfw, key, res, draw_targets)
+        lin_full = {s['site']: s for s in linsites
+                    if s['w'] and s['h'] and s['addr']}
+        out = []
+        for s in dflow:
+            lf = lin_full.get(s['site'])
+            if lf:
+                merged = dict(lf)
+                merged['src'] = 'linear+dataflow'
+                for k in ('hsym', 'addrsym'):
+                    if s.get(k):
+                        merged[k] = s[k]
+                out.append(merged)
+            else:
+                out.append(s)
+        got = {s['site'] for s in out}
+        for site, lf in sorted(lin_full.items()):
+            if site not in got:
+                out.append(dict(lf, src='linear-fallback'))
+        return out
+    results = []
     ins = instructions_of(res, 0x1490)
     sites = harvest(ins)
     results += _slice_targets(ins, sites, draw_targets)
@@ -279,6 +316,15 @@ def harvest_draw_sites(rfw, key, draw_targets=(0x1996, 0x1980)):
         sites = harvest(ins)
         results += _slice_targets(ins, sites, draw_targets)
     return results
+
+
+def _harvest_linear(rfw, key, res, draw_targets):
+    ins = instructions_of(res, 0x1490)
+    out = _slice_targets(ins, harvest(ins), draw_targets)
+    for st, en, anchor in find_code_runs(rfw, key):
+        ins = instructions_of(decrypt_run(rfw, key, st, en, anchor), st)
+        out += _slice_targets(ins, harvest(ins), draw_targets)
+    return out
 
 
 def _slice_targets(ins, sites, draw_targets):
@@ -347,12 +393,13 @@ def calibrate(slices, cal_images):
     return best
 
 
-def run_full(path, out=None, calibrate_map=None):
+def run_full(path, out=None, calibrate_map=None, linear=False):
     rfw = open(path, 'rb').read()
     key = rfwmod.load_key(KEY_DEFAULT)
-    slices = harvest_draw_sites(rfw, key)
+    slices = harvest_draw_sites(rfw, key, linear=linear)
     rich = [s for s in slices if s['w'] and s['h'] and s['addr']]
-    print(f"draw sites sliced: {len(slices)}, with full (w,h,addr): {len(rich)}")
+    print(f"draw sites sliced: {len(slices)}, with full (w,h,addr): {len(rich)}"
+          + ('  [linear baseline]' if linear else '  [dataflow]'))
 
     cal_images = load_map(calibrate_map)['images'] if calibrate_map else []
     # Hard calibration from the flasher's placement data when available:
@@ -416,9 +463,9 @@ def run_full(path, out=None, calibrate_map=None):
     return 0
 
 
-def run(path, out=None, calibrate=None, do_recon=False):
+def run(path, out=None, calibrate=None, do_recon=False, linear=False):
     if calibrate is not None:
-        return run_full(path, out, calibrate)
+        return run_full(path, out, calibrate, linear=linear)
     code, off = load_code_block(path)
     ins = instructions(code, off)
     sites = harvest(ins)
@@ -484,8 +531,12 @@ def main(argv=None):
     ap.add_argument('-o', '--out')
     ap.add_argument('--calibrate')
     ap.add_argument('--recon', action='store_true')
+    ap.add_argument('--linear', action='store_true',
+                    help='use the linear backward-window slicer (baseline) '
+                         'instead of the CFG dataflow engine')
     args = ap.parse_args(argv)
-    return run(args.firmware, args.out, args.calibrate, args.recon)
+    return run(args.firmware, args.out, args.calibrate, args.recon,
+               linear=args.linear)
 
 
 if __name__ == '__main__':
