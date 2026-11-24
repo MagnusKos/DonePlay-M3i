@@ -26,7 +26,18 @@ from rk260x.gui.viewer import FWImage  # noqa: E402
 
 SRC_MARK = {'hand': 'H', 'progression': 'P', 'automap': 'A',
             'hand+automap': 'H+A', 'code': 'C', 'split': 'S',
-            'dataflow': 'D', 'linear-fallback': 'L'}
+            'dataflow': 'D', 'linear-fallback': 'L', 'verdict': 'V'}
+
+
+def mark_of(src):
+    """Normalize a source string to a sheet mark; verdict overlays keep
+    their underlying kind (V:hand, V:code, ...); hypotheses get '?'."""
+    s = str(src or '?')
+    if s.endswith('?hypothesis'):
+        return '?'
+    if s.startswith('verdict:'):
+        return 'V' + SRC_MARK.get(s.split(':', 1)[1], '?')
+    return SRC_MARK.get(s, '?')
 
 
 def col_name(n):
@@ -71,10 +82,9 @@ def render(map_path, fw_path, outdir, cols=8, cell=(170, 160),
     f_title = load_font(18)
 
     title = (f"{os.path.basename(map_path)} — {len(images)} images, "
-             f"cols={cols}, sources: " +
-             '/'.join(f'{v}={k}' for k, v in SRC_MARK.items()
-                      if any(i.get('source', '').startswith(k)
-                             for i in images)))
+             f"cols={cols}, marks: " +
+             '/'.join(f'{v}={k}' for k, v in SRC_MARK.items()) +
+             ', ?=hypothesis, V*=verdict overlay')
     d.text((8, 6), title[:200], font=f_title, fill='black')
 
     index_lines = []
@@ -101,7 +111,7 @@ def render(map_path, fw_path, outdir, cols=8, cell=(170, 160),
                     fill=(255, 255, 160), outline=(90, 90, 90))
         d.text((x0 + 5, y0 + 3), label, font=f_big, fill='black')
         # caption strip
-        mark = SRC_MARK.get(im.get('source', '?'), '?')
+        mark = mark_of(im.get('source', '?'))
         cap1 = f'0x{off:x} {w}x{h} {mark}'
         cap2 = im.get('name', '')
         if im.get('callsites'):

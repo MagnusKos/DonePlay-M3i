@@ -393,7 +393,100 @@ def calibrate(slices, cal_images):
     return best
 
 
-def run_full(path, out=None, calibrate_map=None, linear=False):
+def curate(cands, verdicts, rejects=()):
+    """Operator-taught post-processing (verdict rounds 1-3, NOTES v1.0.1-v1.3):
+    0. rejects: offsets vetoed by the operator never enter the map
+    1. verdict overlay: entries from the operator-curated merged map win
+       wholesale at their offset (names/sizes are operator-verified)
+    2. adjacency containment: an automap entry strictly inside an exact-fit
+       span between two abutting TRUSTED images is misassociated garbage
+    3. same-offset different-size: highest call-site count is primary,
+       others kept flagged '?hypothesis' for the operator
+    4. automap-automap overlaps merge only when SAME size (lesson: greedy
+       area-merges once ate the good 12x88 find)
+    """
+    rejects = {r['offset'] if isinstance(r, dict) else r for r in rejects}
+    cands = [c for c in cands if c['offset'] not in rejects]
+    def vtag(v):
+        return 'verdict:' + (v.get('source') or 'hand')
+
+    vd = {v['offset']: dict(v) for v in verdicts}
+    out, seen_off = [], set()
+    for c in cands:
+        v = vd.get(c['offset'])
+        if v is not None:
+            e = dict(v)
+            e['source'] = vtag(v)
+            if not e.get('callsites') and c.get('callsites'):
+                e['callsites'] = c['callsites']
+            seen_off.add(c['offset'])
+        else:
+            e = dict(c)
+        out.append(e)
+    cand_offs = {c['offset'] for c in cands}
+    for off, v in sorted(vd.items()):
+        if off not in cand_offs:
+            e = dict(v)
+            e['source'] = vtag(v)
+            out.append(e)
+
+    trusted = sorted((e for e in out if str(e.get('source', '')).startswith('verdict')),
+                     key=lambda e: e['offset'])
+    spans = []
+    for a, b in zip(trusted, trusted[1:]):
+        if a['offset'] + a['width'] * a['height'] * 2 == b['offset']:
+            spans.append((a['offset'],
+                          b['offset'] + b['width'] * b['height'] * 2))
+    kept = []
+    purged = 0
+    for e in out:
+        if str(e.get('source', '')).startswith('verdict'):
+            kept.append(e)
+            continue
+        s, t = e['offset'], e['offset'] + e['width'] * e['height'] * 2
+        if any(s >= ps and t <= pt for ps, pt in spans):
+            purged += 1
+            continue
+        kept.append(e)
+    out = kept
+
+    byoff = {}
+    for e in out:
+        byoff.setdefault(e['offset'], []).append(e)
+    out = []
+    for off in sorted(byoff):
+        es = sorted(byoff[off],
+                    key=lambda e: (-(e.get('callsites') or 0),
+                                   e['width'] * e['height']))
+        out.append(es[0])
+        for e in es[1:]:
+            if not str(e.get('source', '')).startswith('verdict'):
+                e['source'] = str(e.get('source') or 'automap') + '?hypothesis'
+            out.append(e)
+
+    auto = [e for e in out
+            if not str(e.get('source', '')).startswith('verdict')
+            and not str(e.get('source', '')).endswith('?hypothesis')]
+    drop = set()
+    for i, a in enumerate(auto):
+        if id(a) in drop:
+            continue
+        for b in auto[i + 1:]:
+            if id(b) in drop or (a['width'], a['height']) != (b['width'], b['height']):
+                continue
+            ae = a['offset'] + a['width'] * a['height'] * 2
+            be = b['offset'] + b['width'] * b['height'] * 2
+            ov = min(ae, be) - max(a['offset'], b['offset'])
+            if ov > 0.7 * (a['width'] * a['height'] * 2):
+                a['callsites'] = (a.get('callsites') or 0) + (b.get('callsites') or 0)
+                drop.add(id(b))
+    out = [e for e in out if id(e) not in drop]
+    out.sort(key=lambda e: e['offset'])
+    return out, purged
+
+
+def run_full(path, out=None, calibrate_map=None, linear=False, verdicts=None,
+             rejects=None):
     rfw = open(path, 'rb').read()
     key = rfwmod.load_key(KEY_DEFAULT)
     slices = harvest_draw_sites(rfw, key, linear=linear)
@@ -447,6 +540,14 @@ def run_full(path, out=None, calibrate_map=None, linear=False):
     for im in cal_images:
         if im['offset'] not in {i['offset'] for i in images}:
             images.append(dict(im, source='hand'))
+    purged = 0
+    rejects_used = []
+    if verdicts:
+        vimgs = load_map(verdicts)['images']
+        rj = []
+        if rejects and os.path.exists(rejects):
+            rj = json.load(open(rejects)).get('rejects', [])
+        images, purged = curate(images, vimgs, rj)
     images.sort(key=lambda i: i['offset'])
     m = {'format': MAP_FORMAT, 'device': None,
          'firmware': os.path.basename(path), 'pixel_format': 'BE-BGR565',
@@ -454,7 +555,8 @@ def run_full(path, out=None, calibrate_map=None, linear=False):
          'images': images,
          'note': f'automap v1.0: {len(images)} images '
                  f'({sum(1 for i in images if i.get("source") == "automap")} new), '
-                 f'{rejected} candidates rejected by raster validation'}
+                 f'{rejected} candidates rejected by raster validation'
+                 + (f', {purged} purged by adjacency rule' if purged else '')}
     out = out or os.path.splitext(path)[0] + '.map.json'
     with open(out, 'w', encoding='utf-8') as f:
         json.dump(m, f, indent=1, ensure_ascii=False)
@@ -463,9 +565,11 @@ def run_full(path, out=None, calibrate_map=None, linear=False):
     return 0
 
 
-def run(path, out=None, calibrate=None, do_recon=False, linear=False):
+def run(path, out=None, calibrate=None, do_recon=False, linear=False,
+        verdicts=None, rejects=None):
     if calibrate is not None:
-        return run_full(path, out, calibrate, linear=linear)
+        return run_full(path, out, calibrate, linear=linear, verdicts=verdicts,
+                        rejects=rejects)
     code, off = load_code_block(path)
     ins = instructions(code, off)
     sites = harvest(ins)
@@ -530,13 +634,20 @@ def main(argv=None):
     ap.add_argument('firmware')
     ap.add_argument('-o', '--out')
     ap.add_argument('--calibrate')
+    ap.add_argument('--verdicts',
+                   help='operator-curated merged map (e.g. m3i_automap.json): '
+                        'entries win wholesale; adjacency/dedup rules applied')
+    ap.add_argument('--rejects',
+                   help='rejects sidecar JSON (rk260x-image-rejects/1): '
+                        'vetoed offsets never enter the map')
     ap.add_argument('--recon', action='store_true')
     ap.add_argument('--linear', action='store_true',
                     help='use the linear backward-window slicer (baseline) '
                          'instead of the CFG dataflow engine')
     args = ap.parse_args(argv)
     return run(args.firmware, args.out, args.calibrate, args.recon,
-               linear=args.linear)
+               linear=args.linear, verdicts=args.verdicts,
+               rejects=args.rejects)
 
 
 if __name__ == '__main__':

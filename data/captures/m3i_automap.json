@@ -734,6 +734,14 @@
    "confidence": "raster-validated"
   },
   {
+   "name": "ScreenFileList",
+   "offset": 9068830,
+   "width": 220,
+   "height": 176,
+   "source": "automap",
+   "note": "operator round4: list screen in file manager"
+  },
+  {
    "name": "ScreenLists",
    "offset": 9251650,
    "width": 220,
@@ -796,6 +804,22 @@
    "height": 176,
    "source": "progression",
    "note": "lock-screen run"
+  },
+  {
+   "name": "img_975e00_48x18",
+   "offset": 9920000,
+   "width": 48,
+   "height": 18,
+   "source": "automap",
+   "note": "operator round4: fine"
+  },
+  {
+   "name": "img_9764c0_48x18",
+   "offset": 9921728,
+   "width": 48,
+   "height": 18,
+   "source": "automap",
+   "note": "operator round4: fine"
   }
  ],
  "note": "automap v1.3: code-grounded entries added (draw-site referenced, previously rejected by raster heuristics)"

@@ -88,7 +88,9 @@ def cmd_zspdis(args):
 def cmd_automap(args):
     from . import automap
     automap.run(args.firmware, args.out, args.calibrate, args.recon,
-                linear=getattr(args, 'linear', False))
+                linear=getattr(args, 'linear', False),
+                verdicts=getattr(args, "verdicts", None),
+                rejects=getattr(args, "rejects", None))
     return 0
 
 
@@ -124,6 +126,11 @@ def main(argv=None):
     p.add_argument('firmware', help='.rfw firmware container')
     p.add_argument('-o', '--out', default=None, help='output device map (JSON)')
     p.add_argument('--calibrate', default=None, help='existing JSON map for validation')
+    p.add_argument('--verdicts', default=None,
+                   help='operator-curated merged map: entries win wholesale; '
+                        'adjacency/dedup rules applied')
+    p.add_argument('--rejects', default=None,
+                   help='rejects sidecar JSON: vetoed offsets never enter the map')
     p.add_argument('--recon', action='store_true', help='reconnaissance only')
     p.add_argument('--linear', action='store_true',
                    help='use the linear backward-window slicer (baseline) '

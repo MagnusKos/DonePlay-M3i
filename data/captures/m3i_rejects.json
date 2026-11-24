@@ -1,0 +1,11 @@
+{
+ "format": "rk260x-image-rejects/1",
+ "rejects": [
+  {
+   "offset": 9037627,
+   "width": 20,
+   "height": 11,
+   "reason": "operator round4: garbage (covers same-offset hypotheses too)"
+  }
+ ]
+}
